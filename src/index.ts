@@ -375,7 +375,7 @@ export class Transload {
   }
 
   async transload(): Promise<TResult> {
-    this.logger.log(`Starting download: ${this.downloadUrl}`);
+    this.logger?.log(`Starting download: ${this.downloadUrl}`);
     try {
       const abortController = new AbortController();
       const signal = abortController.signal;
@@ -432,7 +432,7 @@ export class Transload {
       });
 
       response.body?.on('error', (error) => {
-        this.logger.log(`Download stream failed: `, error);
+        this.logger?.log(`Download stream failed: `, error);
         // Propagete the error through all upload streams
         this.uploads.destroyAll(error);
         abortController.abort();
@@ -450,7 +450,7 @@ export class Transload {
       // Set an interval to log the download progress every 5 seconds
       const intervalId = setInterval(() => {
         const progress = (bytesDownloaded / knownLength) * 100;
-        this.logger.log(
+        this.logger?.log(
           `Download progress: ${progress.toFixed(
             2
           )}% @ bytes: ${bytesDownloaded}`
@@ -476,7 +476,7 @@ export class Transload {
         uploads: responses
       };
     } catch (error) {
-      this.logger.log(`Error downloading file ${this.downloadUrl}: `, error);
+      this.logger?.log(`Error downloading file ${this.downloadUrl}: `, error);
       throw error;
     }
   }
