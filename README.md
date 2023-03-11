@@ -78,18 +78,10 @@ let secondUpload = {
   fileName: 'example.zip'
 };
 
-let thirdUpload = {
-  uploadUrl: 'https://example.com'
-};
-
-let instance = new Transload(
-  downloadUrl,
-  [firstUpload, secondUpload, thirdUpload],
-  {
-    calculateMD5: true,
-    logger: console
-  }
-);
+let instance = new Transload(downloadUrl, [firstUpload, secondUpload], {
+  calculateMD5: true,
+  logger: console
+});
 let results = await instance.transload();
 console.dir(results, { depth: null });
 ```
