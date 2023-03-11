@@ -136,6 +136,64 @@ Failed to parse response as JSON, returnign text
 }
 ```
 
+### Save file locally while downloading & uploading
+
+```js
+import os from 'os';
+import { Transload } from 'node-file-transload';
+
+// Disable debug logs
+console.debug = function () {};
+
+let downloadUrl = 'http://212.183.159.230/5MB.zip';
+let localPath = os.tmpdir() + '/5MB.zip';
+
+let firstUpload = {
+  uploadUrl: 'https://non-existing-domain.com'
+};
+
+let instance = new Transload(downloadUrl, [firstUpload], {
+  calculateMD5: true,
+  saveToLocalPath: localPath,
+  logger: console
+});
+let results = await instance.transload();
+console.dir(results, { depth: null });
+```
+
+Result:
+
+```bash
+Upload stream 0 prepared: https://non-existing-domain.com
+Starting download: http://212.183.159.230/5MB.zip
+Error uploading to https://non-existing-domain.com:  FetchError: request to https://non-existing-domain.com/ failed, reason: getaddrinfo ENOTFOUND non-existing-domain.com
+[...]
+No more usable upload streams, but we are saving to local
+Download complete, MD5 checksum: b3215c06647bc550406a9c8ccc378756
+{
+  url: 'http://212.183.159.230/5MB.zip',
+  size: 5242880,
+  filename: '5MB.zip',
+  md5: 'b3215c06647bc550406a9c8ccc378756',
+  local: {
+    path: '/tmp/5MB.zip',
+    size: 5242880
+  },
+  uploads: [
+    {
+      uploadUrl: 'https://non-existing-domain.com',
+      fileName: '5MB.zip',
+      size: 5242880,
+      uploadedByes: 13921,
+      randomBytesCount: undefined,
+      md5: undefined,
+      response: null,
+      error: 'request to https://non-existing-domain.com/ failed, reason: getaddrinfo ENOTFOUND non-existing-domain.com'
+    }
+  ]
+}
+```
+
 ## Error handling
 
 - When one or more upload streams fail, the other ones will continue.
