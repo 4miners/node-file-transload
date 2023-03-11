@@ -12,6 +12,7 @@ export type TUploadConfig = {
   randomBytesCount?: number;
   headers?: any;
   agent?: any;
+  method?: string;
 };
 
 export type TConfig = {
@@ -49,6 +50,7 @@ interface IUploadInternals {
   randomBytesCount?: number;
   headers?: any;
   agent?: any;
+  method: string;
   md5Result?: string;
   resetTimeout(): void;
   setSize(size: number): void;
@@ -70,6 +72,7 @@ class UploadInternals implements IUploadInternals {
   public randomBytesCount?: number;
   public headers?: any;
   public agent?: any;
+  public method: string;
   private _md5Hash?: crypto.Hash;
   public md5Result?: string;
   private _abortController: AbortController;
@@ -92,6 +95,7 @@ class UploadInternals implements IUploadInternals {
     this.randomBytesCount = upload.randomBytesCount;
     this.headers = upload.headers || this._defaultHeaders;
     this.agent = upload.agent;
+    this.method = upload.method || 'POST';
     this.stream = new PassThrough({ highWaterMark: 1024 * 1024 * 20 });
     this._abortController = new AbortController();
     this.uploadedByes = 0;
@@ -167,19 +171,31 @@ class UploadInternals implements IUploadInternals {
   getPromise(): Promise<TUploadResult> {
     return new Promise(async (resolve, reject) => {
       try {
-        const formData = new FormData();
-        formData.append('file', this.stream, {
-          filename: this.fileName,
-          knownLength: this.size
-        });
+        let res;
+        if (this.method === 'PUT') {
+          res = await fetch(this.uploadUrl, {
+            method: this.method,
+            body: this.stream,
+            headers: this.headers,
+            agent: this.agent,
+            signal: this.getAbortSignal()
+          });
+        } else {
+          const formData = new FormData();
+          formData.append('file', this.stream, {
+            filename: this.fileName,
+            knownLength: this.size
+          });
 
-        const res = await fetch(this.uploadUrl, {
-          method: 'POST',
-          body: formData,
-          headers: this.headers,
-          agent: this.agent,
-          signal: this.getAbortSignal()
-        });
+          res = await fetch(this.uploadUrl, {
+            method: this.method,
+            body: formData,
+            headers: this.headers,
+            agent: this.agent,
+            signal: this.getAbortSignal()
+          });
+        }
+
         this._logger?.log(`Upload completed: ${this.uploadUrl}`);
         const body = await res.text();
         try {
