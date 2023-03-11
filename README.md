@@ -144,7 +144,7 @@ Failed to parse response as JSON, returnign text
 }
 ```
 
-### Error handling
+## Error handling
 
 - When one or more upload streams fail, the other ones will continue.
 - If all upload streams fails - the download request will be aborted.
