@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "outDir": "build",
+    "outDir": "dist",
     "rootDir": "src",
-    "module": "commonjs",
+    "module": "CommonJS",
     "sourceMap": true,
     "lib": ["esnext", "dom"],
     "strict": true,
     "esModuleInterop": true,
     "target": "es2017",
-    "declaration": true
+    "declaration": true,
+    "typeRoots": ["./@types", "./node_modules/@types"]
   },
   "include": ["src/**/*"]
 }
