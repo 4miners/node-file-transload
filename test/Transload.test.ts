@@ -50,9 +50,6 @@ describe('download a file and upload two files at the same time', () => {
     let result = await getUploadUrl();
     let uploadUrl = 'https:' + result;
 
-    // Get info about file size from remote server
-    size = Number((await fetch(downloadUrl)).headers.get('content-length'));
-
     firstUpload = {
       uploadUrl
     };
@@ -190,9 +187,6 @@ describe('download a file and upload two files at the same time (PUT request)', 
   beforeAll(async () => {
     let uploadUrl1 = 'https://transfer.sh/5MB.zip';
     let uploadUrl2 = 'https://transfer.sh/test.zip';
-
-    // Get info about file size from remote server
-    size = Number((await fetch(downloadUrl)).headers.get('content-length'));
 
     firstUpload = {
       uploadUrl: uploadUrl1,
