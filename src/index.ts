@@ -27,7 +27,13 @@ export type TResult = {
   size: number;
   filename: string;
   md5?: string;
+  local?: TLocalResult;
   uploads: TUploadResult[];
+};
+
+export type TLocalResult = {
+  path: string;
+  size: number;
 };
 
 export type TUploadResult = {
@@ -507,11 +513,21 @@ export class Transload {
         result.status === 'fulfilled' ? result.value : result.reason
       );
 
+      // Add information about local file
+      let local: any;
+      if (this.saveToLocalPath) {
+        local = {
+          path: this.saveToLocalPath,
+          size: fs.statSync(this.saveToLocalPath).size
+        };
+      }
+
       return {
         url: this.downloadUrl,
         size: knownLength,
         filename: fileName,
         md5: this.md5Result,
+        local: local,
         uploads: uploadResponses
       };
     } catch (error) {
