@@ -2,14 +2,24 @@ import fetch from 'node-fetch';
 import { TResult, TUploadConfig, Transload } from '../src/index';
 
 async function getUploadUrl() {
-  let res = await fetch('https://uptobox.com');
-  let data = await res.text();
-  console.log(data);
-  //<form id="fileupload" action="//www104.uptobox.com/upload?sess_id=h8ieSwM88E77I0oDlkaj"
-  let uploadUrlRx = /id="fileupload" action="\/\/(.+?)"/;
-  let match = uploadUrlRx.exec(data);
-  if (match) {
-    return match[1];
+  // Try to use API token if provided
+  let apiToken = process.env.UPTOBOX_TOKEN;
+  if (apiToken) {
+    let res = await fetch('https://uptobox.com/api/upload?token=' + apiToken);
+    let data = await res.json();
+    return data.data.uploadLink;
+  } else {
+    let res = await fetch('https://uptobox.com');
+    let data = await res.text();
+    console.log(data);
+    //<form id="fileupload" action="//www104.uptobox.com/upload?sess_id=h8ieSwM88E77I0oDlkaj"
+    let uploadUrlRx = /id="fileupload" action="(.+?)"/;
+    let match = uploadUrlRx.exec(data);
+    if (match) {
+      return match[1];
+    } else {
+      throw Error('Failed to get upload token');
+    }
   }
 }
 
@@ -38,7 +48,7 @@ describe('download a file and upload two files at the same time', () => {
 
   beforeAll(async () => {
     let result = await getUploadUrl();
-    let uploadUrl = 'https://' + result;
+    let uploadUrl = 'https:' + result;
 
     // Get info about file size from remote server
     size = Number((await fetch(downloadUrl)).headers.get('content-length'));
