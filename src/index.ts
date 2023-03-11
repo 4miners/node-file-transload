@@ -431,8 +431,15 @@ export class Transload {
       });
 
       this.uploads.on('unusable', () => {
-        this.logger?.log('No more usable upload streams, aborting download');
-        abortController.abort();
+        if (this.saveToLocalPath) {
+          this.logger?.log(
+            'No more usable upload streams, but we are saving to local'
+          );
+          response.body?.resume();
+        } else {
+          this.logger?.log('No more usable upload streams, aborting download');
+          abortController.abort();
+        }
       });
 
       // If a local path is specified, create a write stream to save the file locally
@@ -460,6 +467,15 @@ export class Transload {
         abortController.abort();
       });
 
+      let fileStreamPromise = new Promise((resolve, reject) => {
+        if (!this.saveToLocalPath) {
+          resolve(null);
+        }
+        this.fileStream?.on('finish', () => {
+          resolve(null);
+        });
+      });
+
       // When all data has been received, end the upload streams for each server
       response.body?.on('end', () => {
         this.uploads.finalizeAll();
@@ -480,13 +496,14 @@ export class Transload {
       }, 5000);
 
       // Prepare upload promises
-      const uploadPromises = this.uploads.getPromises();
-      // Wait for all Promises to resolve and log the MD5 hash and upload responses
-      const results = await Promise.allSettled(uploadPromises);
+      let uploadPromises = Promise.allSettled(this.uploads.getPromises());
+
+      // Wait for all promises to complete, including saving to local path
+      const results = await Promise.all([uploadPromises, fileStreamPromise]);
 
       clearInterval(intervalId);
 
-      const responses = results.map((result) =>
+      const uploadResponses = results[0].map((result) =>
         result.status === 'fulfilled' ? result.value : result.reason
       );
 
@@ -495,7 +512,7 @@ export class Transload {
         size: knownLength,
         filename: fileName,
         md5: this.md5Result,
-        uploads: responses
+        uploads: uploadResponses
       };
     } catch (error) {
       this.logger?.log(`Error downloading file ${this.downloadUrl}: `, error);
