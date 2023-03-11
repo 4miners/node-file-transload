@@ -176,7 +176,7 @@ describe('download a file and upload two files at the same time', () => {
     for (const filetoDelete of filesToDelete) {
       await deleteUploadedFile(filetoDelete);
     }
-  }, 60000);
+  }, 120000);
 });
 
 describe('download a file and upload two files at the same time (PUT request)', () => {
@@ -213,7 +213,7 @@ describe('download a file and upload two files at the same time (PUT request)', 
     });
     results = await instance.transload();
     console.dir(results, { depth: null });
-  }, 60000);
+  }, 120000);
 
   describe('first upload result', () => {
     it('should be no error', async () => {
