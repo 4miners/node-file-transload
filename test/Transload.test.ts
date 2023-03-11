@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { TResult, TUploadConfig, Transload } from '../src/index';
+import fs from 'fs';
 
 async function getUploadUrl() {
   // Try to use API token if provided
@@ -292,5 +293,94 @@ describe('download a file and upload two files at the same time (PUT request)', 
         /^https:\/\/transfer\.sh\/.+?\/test.zip$/
       );
     });
+  });
+});
+
+describe('save file to disk when all upload streams failed', () => {
+  let results: TResult;
+  let size: number = 5242880;
+  let md5: string = 'b3215c06647bc550406a9c8ccc378756';
+  let firstUpload: TUploadConfig;
+  let downloadUrl: string = 'http://212.183.159.230/5MB.zip';
+  let localPath = __dirname + '/5MB.zip';
+
+  beforeAll(async () => {
+    console.debug = () => {};
+    let uploadUrl1 = 'https://non-existing-domain.com';
+
+    firstUpload = {
+      uploadUrl: uploadUrl1
+    };
+
+    let instance = new Transload(downloadUrl, [firstUpload], {
+      calculateMD5: true,
+      saveToLocalPath: localPath,
+      logger: console
+    });
+    results = await instance.transload();
+    console.dir(results, { depth: null });
+  }, 120000);
+
+  describe('first upload result', () => {
+    it('should have an error', async () => {
+      let uploadResult = results.uploads[0];
+      expect(typeof uploadResult.error).toBe('string');
+    });
+
+    it('should have correct upload url', async () => {
+      let uploadResult = results.uploads[0];
+      expect(uploadResult.uploadUrl).toBe(firstUpload.uploadUrl);
+    });
+
+    it('should have correct size', async () => {
+      let uploadResult = results.uploads[0];
+      expect(uploadResult.size).toBe(size);
+    });
+
+    it('should have uploaded bytes not equal to size', async () => {
+      let uploadResult = results.uploads[0];
+      expect(uploadResult.uploadedByes).not.toBe(uploadResult.size);
+    });
+
+    it('should not have random bytes set', async () => {
+      let uploadResult = results.uploads[0];
+      expect(uploadResult.randomBytesCount).toBeUndefined();
+    });
+
+    it('should not have a md5 checksum', async () => {
+      let uploadResult = results.uploads[0];
+      expect(uploadResult.md5).toBeUndefined();
+    });
+
+    it('should have empty response', async () => {
+      let uploadResult = results.uploads[0];
+      expect(uploadResult.response).toBeFalsy();
+    });
+  });
+
+  describe('local result', () => {
+    it('should have correct path', async () => {
+      expect(results.local?.path).toBe(localPath);
+    });
+
+    it('should have correct size', async () => {
+      expect(results.local?.size).toBe(size);
+    });
+  });
+
+  describe('file on disk', () => {
+    it('should exits', async () => {
+      var fileExists = fs.existsSync(localPath);
+      expect(fileExists).toBe(true);
+    });
+
+    it('should have correct size', async () => {
+      var stats = fs.statSync(localPath);
+      expect(stats.size).toBe(size);
+    });
+  });
+
+  afterAll(async () => {
+    fs.unlinkSync(localPath);
   });
 });
