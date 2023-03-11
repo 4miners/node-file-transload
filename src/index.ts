@@ -180,9 +180,15 @@ class UploadInternals implements IUploadInternals {
           agent: this.agent,
           signal: this.getAbortSignal()
         });
-        const json = await res.json();
         this._logger?.log(`Upload completed: ${this.uploadUrl}`);
-        resolve(this.getResult(json));
+        const body = await res.text();
+        try {
+          const json = JSON.parse(body);
+          resolve(this.getResult(json));
+        } catch (err) {
+          this._logger?.log(`Failed to parse response as JSON, returnign text`);
+          resolve(this.getResult(body));
+        }
       } catch (error) {
         this._logger?.error(`Error uploading to ${this.uploadUrl}: `, error);
 
