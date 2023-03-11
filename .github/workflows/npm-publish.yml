@@ -16,12 +16,12 @@ jobs:
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
-        env:
-          UPTOBOX_TOKEN: ${{ secrets.UPTOBOX_TOKEN }}
       - name: Clean install packages
         run: npm ci
       - name: Run Tests
         run: npm test
+        env:
+          UPTOBOX_TOKEN: ${{ secrets.UPTOBOX_TOKEN }}
       - name: Build
         run: npm run build
       - name: Publish to npm
