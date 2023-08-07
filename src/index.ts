@@ -382,7 +382,7 @@ export class Transload {
     );
     if (contentDispositionHeader) {
       const filenameMatch = contentDispositionHeader.match(
-        /filename\*?=(?:UTF-8|ISO-8859-2)?(['"])?([^'";\n]+)\1?/i
+        /filename\*?=(?:UTF-8|ISO-8859-2)?(''|["'])?([^;\n]+)(?<!["'])/i
       );
       const encodedFilename = filenameMatch ? filenameMatch[2] : '';
 
