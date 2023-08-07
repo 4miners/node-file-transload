@@ -319,17 +319,7 @@ class Uploads extends EventEmitter {
   }
 
   isAllStreamsUnusable() {
-    let unusableCount = 0;
-    for (const upload of this.uploads) {
-      if (!upload.isStreamAlive()) {
-        unusableCount++;
-      }
-    }
-    if (unusableCount === this.uploads.length) {
-      return true;
-    } else {
-      return false;
-    }
+    return this.uploads.every((upload) => !upload.isStreamAlive());
   }
 
   getPromises() {
